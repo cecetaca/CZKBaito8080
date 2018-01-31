@@ -55,6 +55,7 @@ class CZKBaito8080: NSObject {
 
 	var array = [UInt8]()
 	var output = ""
+	var cycles = 0
 
 
 	init(filePath: String) {
@@ -107,9 +108,15 @@ class CZKBaito8080: NSObject {
 				addRegister(reg: &B)
 				pc += 1
 				break
+			case 0xFE: str += "CPI, #$\(byte2)" // Compare inmediate to (A)ccumulator
+				compareInmediate(inm: UInt8(byte2)!)
+				cycles += 2
+				pc += 2
+				break
 			case 0xE6: str += "ANI"
 				andInmediate(inm: UInt8(byte2,radix:16)!)
 				pc += 2
+			
 			// BRANCH
 			case 195: str += "JMP $\(String(array[pc+2],radix:16))\(String(array[pc+1],radix:16))"
 				jumpInmediate(inm: Int(byte3+byte2,radix:16)!)
@@ -149,6 +156,11 @@ class CZKBaito8080: NSObject {
 				SP = Int("\(byte3)\(byte2)",radix:16)!
 				pc += 3
 				break
+			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
+				moveToMemoryInmediate(inm: UInt8(byte2)!)
+				cycles += 3
+				pc += 2
+				break
 			case 0x32: str += "STA" //Store A(ccumulator) direct
 				storeAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				pc += 3
@@ -159,6 +171,11 @@ class CZKBaito8080: NSObject {
 				break
 			case 0x77: str += "MOV M, A" //Move register to memory
 				moveRegisterToMemory(reg: &A)
+				pc += 1
+				break
+			case 0x7C: str += "MOV A, H" //Move register to register (r1) <- (r2)
+				moveRegister(reg: &H, toRegister: &A)
+				cycles += 1
 				pc += 1
 				break
 			// STACK
@@ -173,14 +190,14 @@ class CZKBaito8080: NSObject {
 	}
 
 	//MARK: Flags
-	func updateFlags(value: Int, clearCarry:Bool) -> UInt8 {
+	func setUpdatingFlags(value: Int, clearCarry:Bool) -> UInt8 {
 		var value8: UInt8?
 		// Carry
 		if (value > 0xFF) {
-			value8 = UInt8(value - 0xFF)
+			value8 = UInt8(value - 0xFF - 1)
 			CY = 1
 		} else if (value < 0) {
-			value8 = UInt8(0xFF - value*(-1))
+			value8 = UInt8(0xFF - value*(-1) + 1)
 			CY = 1
 		} else {
 			value8 = UInt8(value)
@@ -216,7 +233,7 @@ class CZKBaito8080: NSObject {
 	//MARK: - ALU functions
 	func decrementRegister(reg:UnsafeMutablePointer<UInt8>) {
 		let res = Int(reg.pointee) - 1
-		reg.pointee = updateFlags(value: res, clearCarry: false)
+		reg.pointee = setUpdatingFlags(value: res, clearCarry: false)
 	}
 
 	func moveInmediate(reg:UnsafeMutablePointer<UInt8>, inm:UInt8) {
@@ -232,17 +249,22 @@ class CZKBaito8080: NSObject {
 
 	func incrementRegister(reg: UnsafeMutablePointer<UInt8>) {
 		let res = Int(reg.pointee) + 1
-		reg.pointee = updateFlags(value: res, clearCarry: false)
+		reg.pointee = setUpdatingFlags(value: res, clearCarry: false)
 	}
 
 	func addRegister(reg: UnsafePointer<UInt8>) {
 		let res = Int(B) + Int(reg.pointee)
-		B = updateFlags(value: res, clearCarry: false)
+		B = setUpdatingFlags(value: res, clearCarry: false)
 	}
 
 	func andInmediate(inm: UInt8) {
 		let res = Int(A & inm)
-		A = updateFlags(value: res, clearCarry: true)
+		A = setUpdatingFlags(value: res, clearCarry: true)
+	}
+
+	func compareInmediate(inm: UInt8) {
+		let res = Int(A) - Int(inm)
+		_ = setUpdatingFlags(value: res, clearCarry: false)
 	}
 
 	//MARK: BRANCH functions
@@ -266,7 +288,7 @@ class CZKBaito8080: NSObject {
 	}
 
 	func callException(inm: Int) {
-		let pc16 = UInt16(pc+1)
+		let pc16 = UInt16(pc+3)
 		let PCH = UInt8((0xFF00 & pc16) >> 8)
 		let PCL = UInt8(0x00FF & pc16)
 		array[SP-1] = PCH
@@ -298,16 +320,17 @@ class CZKBaito8080: NSObject {
 		array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!] = reg.pointee
 	}
 
+	func moveToMemoryInmediate(inm: UInt8) {
+		array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!] = inm
+	}
+
+	func moveRegister(reg: UnsafePointer<UInt8>, toRegister: UnsafeMutablePointer<UInt8>) {
+		toRegister.pointee = reg.pointee
+	}
+
 	//TODO: STACK functions
 
 	//MARK: - Interaction
-	func runAll() {
-		while (pc < (array.count)) {
-			disassemble()
-		}
-		print("Done.")
-	}
-
 	func step() {
 		if (pc < array.count) {
 			disassemble()

@@ -35,7 +35,8 @@ class ViewController: NSViewController {
 	}
 
 	@IBAction func runButtonClicked(_ sender: Any) {
-		AppDelegate.machine.runAll()
+		// Run at specified frequency and the right cycles.
+
 	}
 
 	@IBAction func stepButtonClicked(_ sender: Any) {
