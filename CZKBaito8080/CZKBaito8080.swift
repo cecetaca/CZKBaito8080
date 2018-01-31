@@ -81,31 +81,33 @@ class CZKBaito8080: NSObject {
 		switch (array[pc]) {
 
 			case 0: str += "NOP"
-			pc += 1
+				cycles += 1
+				pc += 1
 				break
 			// ALU
 			case 0x05: str += "DCR B" //Decrement register B
 				decrementRegister(reg: &B)
+				cycles += 1
 				pc += 1
-				break
-			case 0x06: str += "MVI B, #$\(byte2)" //Move inmediate
-				moveInmediate(reg: &B, inm: UInt8(byte2)!)
-				pc += 2
 				break
 			case 0x13: str += "INX D" //Increment D & E register pair
 				incrementRegisterPair(reg: &D)
+				cycles += 1
 				pc += 1
 				break
 			case 0x24: str += "INR H" //Increment register
 				incrementRegister(reg: &H)
+				cycles += 1
 				pc += 1
 				break
 			case 0x23: str += "INX H" //Increment H & L register pair
 				incrementRegisterPair(reg: &H)
+				cycles += 1
 				pc += 1
 				break
 			case 0x80: str += "ADD B"
 				addRegister(reg: &B)
+				cycles += 1
 				pc += 1
 				break
 			case 0xFE: str += "CPI, #$\(byte2)" // Compare inmediate to (A)ccumulator
@@ -115,45 +117,61 @@ class CZKBaito8080: NSObject {
 				break
 			case 0xE6: str += "ANI"
 				andInmediate(inm: UInt8(byte2,radix:16)!)
+				cycles += 2
 				pc += 2
-			
+
 			// BRANCH
 			case 195: str += "JMP $\(String(array[pc+2],radix:16))\(String(array[pc+1],radix:16))"
 				jumpInmediate(inm: Int(byte3+byte2,radix:16)!)
+				cycles += 3
 				break
 			case 0xC2: str += "JNZ $\(byte3)\(byte2)"
 				jumpNotZero(inm: Int(byte3+byte2,radix:16)!)
+				cycles += 3
 				break
 			case 0xC9: str += "RET"
 				returnFromException()
+				cycles += 3
 				break
 			case 0xCD: str += "CALL $\(byte3)\(byte2)" //Call unconditional addr
 				callException(inm: Int(byte3+byte2,radix:16)!)
+				cycles += 5
 				break
 
 			// DATA TRANSFER
 			case 0x01: str += "LXI B, #$\(byte3)\(byte2)" //Load inmediate register pair B & C
 				loadInmediateRegisterPair(reg: &B, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte3,radix:16)!)
+				cycles += 3
 				pc += 3
+				break
+			case 0x06: str += "MVI B, #$\(byte2)" //Move inmediate
+				moveInmediate(reg: &B, inm: UInt8(byte2)!)
+				cycles += 2
+				pc += 2
 				break
 			case 0x0A: str += "LDAX B" //Load (A)ccumulator indirect
 				loadAccumulatorIndirect(reg: &B)
+				cycles += 2
 				pc += 1
 				break
 			case 0x11: str += "LXI D, #$\(byte3)\(byte2)" //Load inmediate register pair D & E
 				loadInmediateRegisterPair(reg: &D, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
+				cycles += 3
 				pc += 3
 				break
 			case 0x1A: str += "LDAX D" //Load (A)ccumulator indirect
 				loadAccumulatorIndirect(reg: &D)
+				cycles += 2
 				pc += 1
 				break
 			case 0x21: str += "LXI H, #$\(byte3)\(byte2)" //Load inmediate register pair H & L
 				loadInmediateRegisterPair(reg: &H, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
+				cycles += 3
 				pc += 3
 				break
 			case 0x31: str += "LXI SP, #$\(byte3)\(byte2)" //Load inmediate stack pointer
 				SP = Int("\(byte3)\(byte2)",radix:16)!
+				cycles += 3
 				pc += 3
 				break
 			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
@@ -163,14 +181,17 @@ class CZKBaito8080: NSObject {
 				break
 			case 0x32: str += "STA" //Store A(ccumulator) direct
 				storeAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
+				cycles += 4
 				pc += 3
 				break
 			case 0x3A: str += "LDA $\(byte3)\(byte2)" //Load (A)ccumulator direct
 				loadAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
+				cycles += 4
 				pc += 2
 				break
 			case 0x77: str += "MOV M, A" //Move register to memory
 				moveRegisterToMemory(reg: &A)
+				cycles += 2
 				pc += 1
 				break
 			case 0x7C: str += "MOV A, H" //Move register to register (r1) <- (r2)
@@ -180,10 +201,11 @@ class CZKBaito8080: NSObject {
 				break
 			// STACK
 			case 0xf5: str += "PUSH PSW ***No implementada***"
-			pc += 1
+				cycles += 3
+				pc += 1
 				break
 			default: str += "\(String(array[pc],radix:16)) ***No implementada***"
-			pc += 1
+				pc += 1
 		}
 		addOutput(res: str)
 
@@ -234,10 +256,6 @@ class CZKBaito8080: NSObject {
 	func decrementRegister(reg:UnsafeMutablePointer<UInt8>) {
 		let res = Int(reg.pointee) - 1
 		reg.pointee = setUpdatingFlags(value: res, clearCarry: false)
-	}
-
-	func moveInmediate(reg:UnsafeMutablePointer<UInt8>, inm:UInt8) {
-		reg.pointee = inm
 	}
 
 	func incrementRegisterPair(reg:UnsafeMutablePointer<UInt8>) {
@@ -314,6 +332,10 @@ class CZKBaito8080: NSObject {
 
 	func loadAccumulatorDirect(addr: Int) {
 		A = array[addr]
+	}
+
+	func moveInmediate(reg:UnsafeMutablePointer<UInt8>, inm:UInt8) {
+		reg.pointee = inm
 	}
 
 	func moveRegisterToMemory(reg: UnsafeMutablePointer<UInt8>) {
