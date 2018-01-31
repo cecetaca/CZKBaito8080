@@ -1,4 +1,5 @@
 MIT License
+
 Please make sure to give credit visibly. 
 
 Copyright (c) 2018 Cecilio C. Tamarit (@cecetaca)
