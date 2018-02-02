@@ -154,6 +154,11 @@ class CZKBaito8080: NSObject {
 				cycles += 2
 				pc += 1
 				break
+			case 0x0E: str += "MVI C, #$\(byte2)" //Move inmediate
+				moveInmediate(reg: &C, inm: UInt8(byte2)!)
+				cycles += 2
+				pc += 2
+				break
 			case 0x11: str += "LXI D, #$\(byte3)\(byte2)" //Load inmediate register pair D & E
 				loadInmediateRegisterPair(reg: &D, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
 				cycles += 3
@@ -200,6 +205,11 @@ class CZKBaito8080: NSObject {
 				pc += 1
 				break
 			// STACK
+			case 0xD5: str += "PUSH D" //Push register pair D & E on stack
+				pushOnStack(reg: &D)
+				cycles += 3
+				pc += 1
+				break
 			case 0xf5: str += "PUSH PSW ***No implementada***"
 				cycles += 3
 				pc += 1
@@ -351,6 +361,12 @@ class CZKBaito8080: NSObject {
 	}
 
 	//TODO: STACK functions
+	func pushOnStack(reg: UnsafeMutablePointer<UInt8>) {
+		array[SP-1] = reg.pointee
+		array[SP-2] = reg.successor().pointee
+		SP = SP-2
+	}
+
 
 	//MARK: - Interaction
 	func step() {
