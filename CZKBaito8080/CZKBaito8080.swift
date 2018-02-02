@@ -105,6 +105,10 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
+			case 0x29: str += "DAD H" //Add H & L to H & L
+				addRegisterPairToHL(reg: &H)
+				cycles += 3
+				pc += 1
 			case 0x80: str += "ADD B"
 				addRegister(reg: &B)
 				cycles += 1
@@ -145,7 +149,7 @@ class CZKBaito8080: NSObject {
 				pc += 3
 				break
 			case 0x06: str += "MVI B, #$\(byte2)" //Move inmediate
-				moveInmediate(reg: &B, inm: UInt8(byte2)!)
+				moveInmediate(reg: &B, inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
 				break
@@ -155,7 +159,7 @@ class CZKBaito8080: NSObject {
 				pc += 1
 				break
 			case 0x0E: str += "MVI C, #$\(byte2)" //Move inmediate
-				moveInmediate(reg: &C, inm: UInt8(byte2)!)
+				moveInmediate(reg: &C, inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
 				break
@@ -174,13 +178,18 @@ class CZKBaito8080: NSObject {
 				cycles += 3
 				pc += 3
 				break
+			case 0x26: str += "MVI H, #$\(byte2)" //Move inmediate
+				moveInmediate(reg: &H, inm: UInt8(byte2,radix:16)!)
+				cycles += 2
+				pc += 2
+				break
 			case 0x31: str += "LXI SP, #$\(byte3)\(byte2)" //Load inmediate stack pointer
 				SP = Int("\(byte3)\(byte2)",radix:16)!
 				cycles += 3
 				pc += 3
 				break
 			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
-				moveToMemoryInmediate(inm: UInt8(byte2)!)
+				moveToMemoryInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 3
 				pc += 2
 				break
@@ -193,6 +202,11 @@ class CZKBaito8080: NSObject {
 				loadAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
 				pc += 2
+				break
+			case 0x6F: str += "MOV A, L" //Move register to register (r1) <- (r2)
+				moveRegister(reg: &L, toRegister: &A)
+				cycles += 1
+				pc += 1
 				break
 			case 0x77: str += "MOV M, A" //Move register to memory
 				moveRegisterToMemory(reg: &A)
@@ -207,6 +221,11 @@ class CZKBaito8080: NSObject {
 			// STACK
 			case 0xD5: str += "PUSH D" //Push register pair D & E on stack
 				pushOnStack(reg: &D)
+				cycles += 3
+				pc += 1
+				break
+			case 0xE5: str += "PUSH H"
+				pushOnStack(reg: &H)
 				cycles += 3
 				pc += 1
 				break
@@ -293,6 +312,17 @@ class CZKBaito8080: NSObject {
 	func compareInmediate(inm: UInt8) {
 		let res = Int(A) - Int(inm)
 		_ = setUpdatingFlags(value: res, clearCarry: false)
+	}
+
+	func addRegisterPairToHL(reg: UnsafeMutablePointer<UInt8>) {
+		let newL = Int(L) + Int(reg.successor().pointee)
+		L = setUpdatingFlags(value: newL, clearCarry: false)
+		var newH = Int(H) + Int(reg.pointee)
+		if (CY == 1) {
+			newH = newH+1
+		}
+		CY = 0
+		H = setUpdatingFlags(value: newH+1, clearCarry: false)
 	}
 
 	//MARK: BRANCH functions
