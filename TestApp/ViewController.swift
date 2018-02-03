@@ -12,10 +12,10 @@ class ViewController: NSViewController {
 
 	@IBOutlet weak var codeTextView: NSTextView!
 	@IBOutlet weak var stateTextView: NSTextView!
-	@IBOutlet weak var stepLabel: NSTextField!
-	@IBOutlet weak var stepSlider: NSSlider!
+	@IBOutlet weak var stepTextField: NSTextField!
 
-	
+	var selectedFilePath: String?
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -29,9 +29,10 @@ class ViewController: NSViewController {
 	}
 
 	@IBAction func clearButtonClicked(_ sender: Any) {
-		AppDelegate.machine = CZKBaito8080(filePath:"~/invaders/invaders")
+		AppDelegate.machine = CZKBaito8080(filePath:selectedFilePath!)
 		stateTextView.string = ""
 		codeTextView.string = ""
+		stepTextField.integerValue = 1
 	}
 
 	@IBAction func runButtonClicked(_ sender: Any) {
@@ -41,13 +42,27 @@ class ViewController: NSViewController {
 
 	@IBAction func stepButtonClicked(_ sender: Any) {
 		var stepNum = 0
-		while (stepNum < stepSlider.integerValue) {
+		while (stepNum < stepTextField.integerValue) {
 			AppDelegate.machine.step()
 			codeTextView.string = AppDelegate.machine.output
 			updateRegsView()
 			stepNum += 1
 		}
 	}
+
+	@IBAction func selectFileClicked(_ sender: Any) {
+		let openPanel = NSOpenPanel()
+		openPanel.begin { (res) in
+			if (res == NSApplication.ModalResponse.OK) {
+				let url = openPanel.urls[0]
+				print("Opening \(url.absoluteString)")
+				self.selectedFilePath = url.path
+				self.clearButtonClicked(self)
+			}
+		}
+
+	}
+
 
 	func updateRegsView() {
 		var regsStr = ""
@@ -66,8 +81,5 @@ class ViewController: NSViewController {
 		codeTextView.scrollToEndOfDocument(self)
 	}
 
-	@IBAction func sliderMoved(_ sender: Any) {
-		stepLabel.stringValue = "Set step: \((sender as! NSSlider).integerValue)"
-	}
 }
 
