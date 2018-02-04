@@ -300,8 +300,8 @@ class CZKBaito8080: NSObject {
 	}
 
 	func addRegister(reg: UnsafePointer<UInt8>) {
-		let res = Int(B) + Int(reg.pointee)
-		B = setUpdatingFlags(value: res, clearCarry: false)
+		let res = Int(A) + Int(reg.pointee)
+		A = setUpdatingFlags(value: res, clearCarry: false)
 	}
 
 	func andInmediate(inm: UInt8) {
@@ -317,12 +317,21 @@ class CZKBaito8080: NSObject {
 	func addRegisterPairToHL(reg: UnsafeMutablePointer<UInt8>) {
 		let newL = Int(L) + Int(reg.successor().pointee)
 		L = setUpdatingFlags(value: newL, clearCarry: false)
-		var newH = Int(H) + Int(reg.pointee)
-		if (CY == 1) {
-			newH = newH+1
+		var newH = Int(reg.pointee)
+		if (&L-1 == reg) {			//Swift enforces exclusive access. This can be disabled or "dirty-fixed" this way.
+			newH = newH + newH
+			if (CY == 1) {
+				newH = newH+1
+			}
+			reg.pointee = setUpdatingFlags(value: newH+1, clearCarry: false)
+		} else {
+			newH = newH + Int(H)
+			if (CY == 1) {
+				newH = newH+1
+			}
+			H = setUpdatingFlags(value: newH+1, clearCarry: false)
 		}
 		CY = 0
-		H = setUpdatingFlags(value: newH+1, clearCarry: false)
 	}
 
 	//MARK: BRANCH functions
