@@ -95,6 +95,10 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
+			case 0x19: str += "DAD D" //Add D & E to H & L
+				addRegisterPairToHL(reg: &D)
+				cycles += 3
+				pc += 1
 			case 0x24: str += "INR H" //Increment register
 				incrementRegister(reg: &H)
 				cycles += 1
@@ -218,12 +222,24 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
-			// STACK
+			case 0xEB: str += "XCHG" //Exchange H & L with D & E
+				exchangeDEHL()
+				cycles += 1
+				pc += 1
+			// STACK, I/O, MACHINE CONTROL
+			case 0xD3: str += "OUT #$\(byte2)" //Output
+				outputTo(port: Int(byte2, radix:16)!)
+				cycles += 3
+				pc += 2
 			case 0xD5: str += "PUSH D" //Push register pair D & E on stack
 				pushOnStack(reg: &D)
 				cycles += 3
 				pc += 1
 				break
+			case 0xE1: str += "POP H"
+				popOffStack(reg: &H)
+				cycles += 3
+				pc += 1
 			case 0xE5: str += "PUSH H"
 				pushOnStack(reg: &H)
 				cycles += 3
@@ -399,13 +415,31 @@ class CZKBaito8080: NSObject {
 		toRegister.pointee = reg.pointee
 	}
 
-	//TODO: STACK functions
+	func exchangeDEHL() {
+		let oldH = H
+		let oldL = L
+		H = D
+		L = E
+		D = oldH
+		E = oldL
+	}
+
+	//MARK: STACK, I/O, MACHINE CONTROL functions
 	func pushOnStack(reg: UnsafeMutablePointer<UInt8>) {
 		array[SP-1] = reg.pointee
 		array[SP-2] = reg.successor().pointee
 		SP = SP-2
 	}
 
+	func popOffStack(reg: UnsafeMutablePointer<UInt8>) {
+		reg.successor().pointee = array[SP]
+		reg.pointee = array[SP+1]
+		SP = SP+2
+	}
+
+	func outputTo(port: Int) {
+		//TODO: Shifting, sound, etc.
+	}
 
 	//MARK: - Interaction
 	func step() {
