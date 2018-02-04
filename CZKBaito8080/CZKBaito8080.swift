@@ -323,13 +323,13 @@ class CZKBaito8080: NSObject {
 			if (CY == 1) {
 				newH = newH+1
 			}
-			reg.pointee = setUpdatingFlags(value: newH+1, clearCarry: false)
+			reg.pointee = setUpdatingFlags(value: newH, clearCarry: false)
 		} else {
 			newH = newH + Int(H)
 			if (CY == 1) {
 				newH = newH+1
 			}
-			H = setUpdatingFlags(value: newH+1, clearCarry: false)
+			H = setUpdatingFlags(value: newH, clearCarry: false)
 		}
 		CY = 0
 	}
