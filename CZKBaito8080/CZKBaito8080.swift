@@ -90,6 +90,14 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
+			case 0x09: str += "DAD B" //Add B & C to H & L
+				addRegisterPairToHL(reg: &B)
+				cycles += 3
+				pc += 1
+			case 0x0D: str += "DCR C" //Decrement register C
+				decrementRegister(reg: &C)
+				cycles += 1
+				pc += 1
 			case 0x13: str += "INX D" //Increment D & E register pair
 				incrementRegisterPair(reg: &D)
 				cycles += 1
@@ -227,6 +235,18 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 			// STACK, I/O, MACHINE CONTROL
+			case 0xC1: str += "POP B"
+				popOffStack(reg: &B)
+				cycles += 3
+				pc += 1
+			case 0xC5: str += "PUSH B"
+				pushOnStack(reg: &B)
+				cycles += 3
+				pc += 1
+			case 0xD1: str += "POP D"
+				popOffStack(reg: &D)
+				cycles += 3
+				pc += 1
 			case 0xD3: str += "OUT #$\(byte2)" //Output
 				outputTo(port: Int(byte2, radix:16)!)
 				cycles += 3
