@@ -56,6 +56,7 @@ class CZKBaito8080: NSObject {
 	var array = [UInt8]()
 	var output = ""
 	var cycles = 0
+	var instCount = 0
 
 
 	init(filePath: String) {
@@ -294,7 +295,7 @@ class CZKBaito8080: NSObject {
 				pc += 1
 		}
 		addOutput(res: str)
-
+		instCount += 1
 	}
 
 	//MARK: Flags
@@ -508,7 +509,7 @@ class CZKBaito8080: NSObject {
 
 	func addOutput(res: String) {
 		print(res)
-		output += "\(res)\n"
+		output = "\(res)\n"
 	}
 
 }

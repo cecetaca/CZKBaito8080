@@ -16,9 +16,11 @@ class ViewController: NSViewController {
 
 	var selectedFilePath: String?
 
+	var cpi = 0.0
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
+		codeTextView.string += "\n"
 		// Do any additional setup after loading the view.
 	}
 
@@ -29,7 +31,11 @@ class ViewController: NSViewController {
 	}
 
 	@IBAction func clearButtonClicked(_ sender: Any) {
-		AppDelegate.machine = CZKBaito8080(filePath:selectedFilePath!)
+		if (selectedFilePath == nil) {
+			selectFileClicked(self)
+		} else {
+			AppDelegate.machine = CZKBaito8080(filePath:selectedFilePath!)
+		}
 		stateTextView.string = ""
 		codeTextView.string = ""
 		stepTextField.integerValue = 1
@@ -42,11 +48,19 @@ class ViewController: NSViewController {
 
 	@IBAction func stepButtonClicked(_ sender: Any) {
 		var stepNum = 0
-		while (stepNum < stepTextField.integerValue) {
-			AppDelegate.machine.step()
-			codeTextView.string = AppDelegate.machine.output
-			updateRegsView()
-			stepNum += 1
+		let stepMax = self.stepTextField.integerValue
+		DispatchQueue.global(qos: .background).async {
+			while (stepNum < stepMax) {
+				AppDelegate.machine.step()
+				stepNum += 1
+				DispatchQueue.main.sync {
+					if (stepNum == stepMax) {
+						self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
+					}
+					self.codeTextView.string += AppDelegate.machine.output
+					self.updateRegsView()
+				}
+			}
 		}
 	}
 
@@ -76,7 +90,8 @@ class ViewController: NSViewController {
 		regsStr += "H: \(AppDelegate.machine.H)\n"
 		regsStr += "L: \(AppDelegate.machine.L)\n\n"
 		regsStr += "Flags:\n"
-		regsStr += "Z: \(AppDelegate.machine.Z)    S: \(AppDelegate.machine.S)    P: \(AppDelegate.machine.P)   CY: \(AppDelegate.machine.CY)"
+		regsStr += "Z: \(AppDelegate.machine.Z)    S: \(AppDelegate.machine.S)    P: \(AppDelegate.machine.P)   CY: \(AppDelegate.machine.CY)\n\n"
+		regsStr += "Instr: \(AppDelegate.machine.instCount)  Cycles: \(AppDelegate.machine.cycles)\nCPI: \(cpi)"
 		stateTextView.string = regsStr
 		codeTextView.scrollToEndOfDocument(self)
 	}
