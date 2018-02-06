@@ -201,7 +201,7 @@ class CZKBaito8080: NSObject {
 				pc += 3
 				break
 			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
-				moveToMemoryInmediate(inm: UInt8(byte2,radix:16)!)
+				moveToMemory(inm: UInt8(byte2,radix:16)!)
 				cycles += 3
 				pc += 2
 				break
@@ -215,21 +215,41 @@ class CZKBaito8080: NSObject {
 				cycles += 4
 				pc += 2
 				break
+			case 0x56: str += "MOV D, M" //Move from memory
+				moveFromMemory(reg: &D)
+				cycles += 2
+				pc += 1
+			case 0x5E: str += "MOV E, M" //Move from memory
+				moveFromMemory(reg: &E)
+				cycles += 2
+				pc += 1
+			case 0x66: str += "MOV H, M" //Move from memory
+				moveFromMemory(reg: &H)
+				cycles += 2
+				pc += 1
 			case 0x6F: str += "MOV A, L" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &L, toRegister: &A)
 				cycles += 1
 				pc += 1
 				break
 			case 0x77: str += "MOV M, A" //Move register to memory
-				moveRegisterToMemory(reg: &A)
+				moveToMemory(reg: &A)
 				cycles += 2
 				pc += 1
 				break
+			case 0x7A: str += "MOV A, D" //Move register to register (r1) <- (r2)
+				moveRegister(reg: &D, toRegister: &A)
+				cycles += 1
+				pc += 1
 			case 0x7C: str += "MOV A, H" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &H, toRegister: &A)
 				cycles += 1
 				pc += 1
 				break
+			case 0x7E: str += "MOV A, M" //Move from memory
+				moveFromMemory(reg: &A)
+				cycles += 2
+				pc += 1
 			case 0xEB: str += "XCHG" //Exchange H & L with D & E
 				exchangeDEHL()
 				cycles += 1
@@ -265,7 +285,8 @@ class CZKBaito8080: NSObject {
 				cycles += 3
 				pc += 1
 				break
-			case 0xf5: str += "PUSH PSW ***No implementada***"
+			case 0xf5: str += "PUSH PSW"
+				pushProcessorStatusWord()
 				cycles += 3
 				pc += 1
 				break
@@ -423,11 +444,11 @@ class CZKBaito8080: NSObject {
 		reg.pointee = inm
 	}
 
-	func moveRegisterToMemory(reg: UnsafeMutablePointer<UInt8>) {
+	func moveToMemory(reg: UnsafeMutablePointer<UInt8>) {
 		array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!] = reg.pointee
 	}
 
-	func moveToMemoryInmediate(inm: UInt8) {
+	func moveToMemory(inm: UInt8) {
 		array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!] = inm
 	}
 
@@ -444,6 +465,15 @@ class CZKBaito8080: NSObject {
 		E = oldL
 	}
 
+	func moveFromMemory(reg: UnsafeMutablePointer<UInt8>) {
+		if (reg.successor() == &L) {  //Again, Swift enforces exclusive access. This can be disabled or "dirty-fixed" this way.
+			reg.pointee = array[Int("\(String(reg.pointee,radix:16))\(String(L,radix:16))",radix:16)!]
+		} else {
+			reg.pointee = array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!]
+		}
+	}
+
+
 	//MARK: STACK, I/O, MACHINE CONTROL functions
 	func pushOnStack(reg: UnsafeMutablePointer<UInt8>) {
 		array[SP-1] = reg.pointee
@@ -455,6 +485,14 @@ class CZKBaito8080: NSObject {
 		reg.successor().pointee = array[SP]
 		reg.pointee = array[SP+1]
 		SP = SP+2
+	}
+
+	func pushProcessorStatusWord() {
+		array[SP-1] = A
+		let psw = Int("\(S)\(Z)0\(AC)0\(P)1\(CY)", radix:2)! //Flags
+		let psw8 = UInt8(psw)
+		array[SP-2] = psw8
+		SP = SP-2
 	}
 
 	func outputTo(port: Int) {
