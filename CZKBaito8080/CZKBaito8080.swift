@@ -99,6 +99,10 @@ class CZKBaito8080: NSObject {
 				decrementRegister(reg: &C)
 				cycles += 1
 				pc += 1
+			case 0x0F: str += "RRC" //Rotate right
+				rotateRight()
+				cycles += 1
+				pc += 1
 			case 0x13: str += "INX D" //Increment D & E register pair
 				incrementRegisterPair(reg: &D)
 				cycles += 1
@@ -127,15 +131,16 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
+			case 0xE6: str += "ANI"
+				andInmediate(inm: UInt8(byte2,radix:16)!)
+				cycles += 2
+				pc += 2
 			case 0xFE: str += "CPI, #$\(byte2)" // Compare inmediate to (A)ccumulator
 				compareInmediate(inm: UInt8(byte2)!)
 				cycles += 2
 				pc += 2
 				break
-			case 0xE6: str += "ANI"
-				andInmediate(inm: UInt8(byte2,radix:16)!)
-				cycles += 2
-				pc += 2
+
 
 			// BRANCH
 			case 195: str += "JMP $\(String(array[pc+2],radix:16))\(String(array[pc+1],radix:16))"
@@ -390,6 +395,13 @@ class CZKBaito8080: NSObject {
 			H = setUpdatingFlags(value: newH, clearCarry: false)
 		}
 		CY = 0
+	}
+
+	func rotateRight() {
+		let res = A >> 1
+		let shiftedOut = A & 1
+		CY = Int(shiftedOut)
+		A = res | (shiftedOut << 7)
 	}
 
 	//MARK: BRANCH functions
