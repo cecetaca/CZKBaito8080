@@ -131,6 +131,11 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
+			case 0xC6: str += "ADI #$\(byte2)"
+				addInmediate(inm: UInt8(byte2, radix:16)!)
+				cycles += 2
+				pc += 2
+				break
 			case 0xE6: str += "ANI"
 				andInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 2
@@ -291,6 +296,10 @@ class CZKBaito8080: NSObject {
 				cycles += 3
 				pc += 1
 				break
+			case 0xF1: str += "POP PSW"
+				popProcessorStatusWord()
+				cycles += 3
+				pc += 1
 			case 0xf5: str += "PUSH PSW"
 				pushProcessorStatusWord()
 				cycles += 3
@@ -404,6 +413,10 @@ class CZKBaito8080: NSObject {
 		A = res | (shiftedOut << 7)
 	}
 
+	func addInmediate(inm: UInt8) {
+		A = setUpdatingFlags(value: Int(A)+Int(inm), clearCarry: false)
+	}
+
 	//MARK: BRANCH functions
 	func jumpInmediate(inm: Int) {
 		pc = inm
@@ -506,6 +519,17 @@ class CZKBaito8080: NSObject {
 		let psw8 = UInt8(psw)
 		array[SP-2] = psw8
 		SP = SP-2
+	}
+
+	func popProcessorStatusWord() {
+		let psw = array[SP]
+		CY = Int(psw & 1)
+		P = Int((psw & 4) >> 2)
+		AC = Int((psw & 16) >> 4)
+		Z = Int((psw & 64) >> 6)
+		S = Int((psw & 128) >> 7)
+		A = array[SP+1]
+		SP += 2
 	}
 
 	func outputTo(port: Int) {
