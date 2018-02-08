@@ -13,10 +13,12 @@ class ViewController: NSViewController {
 	@IBOutlet weak var codeTextView: NSTextView!
 	@IBOutlet weak var stateTextView: NSTextView!
 	@IBOutlet weak var stepTextField: NSTextField!
+	@IBOutlet weak var stepButton: NSButton!
 
 	var selectedFilePath: String?
 
 	var cpi = 0.0
+	var running = false
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -47,20 +49,29 @@ class ViewController: NSViewController {
 	}
 
 	@IBAction func stepButtonClicked(_ sender: Any) {
-		var stepNum = 0
-		let stepMax = self.stepTextField.integerValue
-		DispatchQueue.global(qos: .background).async {
-			while (stepNum < stepMax) {
-				AppDelegate.machine.step()
-				stepNum += 1
-				DispatchQueue.main.sync {
-					if (stepNum == stepMax) {
-						self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
+		if (running == false) {
+			var stepNum = 0
+			let stepMax = self.stepTextField.integerValue
+			running = true
+			stepButton.title = "Stop!"
+			DispatchQueue.global(qos: .background).async {
+				while (stepNum < stepMax && self.running == true) {
+					AppDelegate.machine.step()
+					stepNum += 1
+					DispatchQueue.main.sync {
+						if (stepNum == stepMax) {
+							self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
+							self.running = false
+							self.stepButton.title = "Step"
+						}
+						self.codeTextView.string += AppDelegate.machine.output
+						self.updateRegsView()
 					}
-					self.codeTextView.string += AppDelegate.machine.output
-					self.updateRegsView()
 				}
 			}
+		} else {
+			running = false
+			self.stepButton.title = "Step"
 		}
 	}
 
