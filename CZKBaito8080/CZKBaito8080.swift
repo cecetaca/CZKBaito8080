@@ -57,6 +57,7 @@ class CZKBaito8080: NSObject {
 	var output = ""
 	var cycles = 0
 	var instCount = 0
+	var running = false
 
 
 	init(filePath: String) {
@@ -543,9 +544,22 @@ class CZKBaito8080: NSObject {
 		}
 	}
 
+	func run(specifiedCycles: Int) {
+		if (!running) {
+			running = true
+			let wishedCycle = cycles + specifiedCycles
+			while (cycles < wishedCycle) {
+				if (pc < array.count) {
+					disassemble()
+				}
+			}
+			running = false
+		}
+	}
+
 	func addOutput(res: String) {
 		print(res)
-		output = "\(res)\n"
+		output += "\(res)\n"
 	}
 
 }

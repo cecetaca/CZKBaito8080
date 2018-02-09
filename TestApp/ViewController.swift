@@ -18,7 +18,6 @@ class ViewController: NSViewController {
 	var selectedFilePath: String?
 
 	var cpi = 0.0
-	var running = false
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -45,35 +44,35 @@ class ViewController: NSViewController {
 
 	@IBAction func runButtonClicked(_ sender: Any) {
 		// Run at specified frequency and the right cycles.
-
+		/*let timer = Timer.scheduledTimer(withTimeInterval: 0.001, repeats: true) { (tm) in
+			DispatchQueue.global(qos: .background).async {
+				AppDelegate.machine.run(specifiedCycles: 2000)
+				DispatchQueue.main.sync {
+					self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
+					self.codeTextView.string = AppDelegate.machine.output
+					self.updateRegsView()
+				}
+			}
+		} */
+		
 	}
 
 	@IBAction func stepButtonClicked(_ sender: Any) {
-		if (running == false) {
-			var stepNum = 0
-			let stepMax = self.stepTextField.integerValue
-			running = true
-			stepButton.title = "Stop!"
-			DispatchQueue.global(qos: .background).async {
-				while (stepNum < stepMax && self.running == true) {
-					AppDelegate.machine.step()
-					stepNum += 1
-					DispatchQueue.main.sync {
-						if (stepNum == stepMax) {
-							self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
-							self.running = false
-							self.stepButton.title = "Step"
-						}
-						self.codeTextView.string += AppDelegate.machine.output
-						self.updateRegsView()
-					}
-				}
+		var stepNum = 0
+		let stepMax = self.stepTextField.integerValue
+		DispatchQueue.global(qos: .background).async {
+			while (stepNum < stepMax) {
+				AppDelegate.machine.step()
+				stepNum += 1
 			}
-		} else {
-			running = false
-			self.stepButton.title = "Step"
+			DispatchQueue.main.sync {
+				self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
+				self.codeTextView.string = AppDelegate.machine.output
+				self.updateRegsView()
+			}
 		}
 	}
+
 
 	@IBAction func selectFileClicked(_ sender: Any) {
 		let openPanel = NSOpenPanel()
