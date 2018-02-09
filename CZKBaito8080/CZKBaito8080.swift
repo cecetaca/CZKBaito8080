@@ -225,7 +225,7 @@ class CZKBaito8080: NSObject {
 			case 0x3A: str += "LDA $\(byte3)\(byte2)" //Load (A)ccumulator direct
 				loadAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
-				pc += 2
+				pc += 3
 				break
 			case 0x56: str += "MOV D, M" //Move from memory
 				moveFromMemory(reg: &D)
@@ -251,6 +251,10 @@ class CZKBaito8080: NSObject {
 				break
 			case 0x7A: str += "MOV A, D" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &D, toRegister: &A)
+				cycles += 1
+				pc += 1
+			case 0x7B: str += "MOV A, E"
+				moveRegister(reg: &E, toRegister: &A)
 				cycles += 1
 				pc += 1
 			case 0x7C: str += "MOV A, H" //Move register to register (r1) <- (r2)
