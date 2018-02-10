@@ -96,14 +96,17 @@ class CZKBaito8080: NSObject {
 				addRegisterPairToHL(reg: &B)
 				cycles += 3
 				pc += 1
+				break
 			case 0x0D: str += "DCR C" //Decrement register C
 				decrementRegister(reg: &C)
 				cycles += 1
 				pc += 1
+				break
 			case 0x0F: str += "RRC" //Rotate right
 				rotateRight()
 				cycles += 1
 				pc += 1
+				break
 			case 0x13: str += "INX D" //Increment D & E register pair
 				incrementRegisterPair(reg: &D)
 				cycles += 1
@@ -113,6 +116,7 @@ class CZKBaito8080: NSObject {
 				addRegisterPairToHL(reg: &D)
 				cycles += 3
 				pc += 1
+				break
 			case 0x24: str += "INR H" //Increment register
 				incrementRegister(reg: &H)
 				cycles += 1
@@ -127,8 +131,14 @@ class CZKBaito8080: NSObject {
 				addRegisterPairToHL(reg: &H)
 				cycles += 3
 				pc += 1
+				break
 			case 0x80: str += "ADD B"
 				addRegister(reg: &B)
+				cycles += 1
+				pc += 1
+				break
+			case 0xAF: str += "XRA A" //XOR A with A
+				exclusiveOr(reg: &A)
 				cycles += 1
 				pc += 1
 				break
@@ -141,7 +151,8 @@ class CZKBaito8080: NSObject {
 				andInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
-			case 0xFE: str += "CPI, #$\(byte2)" // Compare inmediate to (A)ccumulator
+				break
+			case 0xFE: str += "CPI #$\(byte2)" // Compare inmediate to (A)ccumulator
 				compareInmediate(inm: UInt8(byte2)!)
 				cycles += 2
 				pc += 2
@@ -212,33 +223,41 @@ class CZKBaito8080: NSObject {
 				cycles += 3
 				pc += 3
 				break
-			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
-				moveToMemory(inm: UInt8(byte2,radix:16)!)
-				cycles += 3
-				pc += 2
-				break
 			case 0x32: str += "STA" //Store A(ccumulator) direct
 				storeAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
 				pc += 3
+				break
+			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
+				moveToMemory(inm: UInt8(byte2,radix:16)!)
+				cycles += 3
+				pc += 2
 				break
 			case 0x3A: str += "LDA $\(byte3)\(byte2)" //Load (A)ccumulator direct
 				loadAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
 				pc += 3
 				break
+			case 0x3E: str += "MVI A, #$\(byte2)" //Move inmediate to A
+				moveInmediate(reg: &A, inm: UInt8(byte2, radix:16)!)
+				cycles += 2
+				pc += 2
+				break
 			case 0x56: str += "MOV D, M" //Move from memory
 				moveFromMemory(reg: &D)
 				cycles += 2
 				pc += 1
+				break
 			case 0x5E: str += "MOV E, M" //Move from memory
 				moveFromMemory(reg: &E)
 				cycles += 2
 				pc += 1
+				break
 			case 0x66: str += "MOV H, M" //Move from memory
 				moveFromMemory(reg: &H)
 				cycles += 2
 				pc += 1
+				break
 			case 0x6F: str += "MOV A, L" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &L, toRegister: &A)
 				cycles += 1
@@ -253,10 +272,12 @@ class CZKBaito8080: NSObject {
 				moveRegister(reg: &D, toRegister: &A)
 				cycles += 1
 				pc += 1
+				break
 			case 0x7B: str += "MOV A, E"
 				moveRegister(reg: &E, toRegister: &A)
 				cycles += 1
 				pc += 1
+				break
 			case 0x7C: str += "MOV A, H" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &H, toRegister: &A)
 				cycles += 1
@@ -266,27 +287,38 @@ class CZKBaito8080: NSObject {
 				moveFromMemory(reg: &A)
 				cycles += 2
 				pc += 1
+				break
 			case 0xEB: str += "XCHG" //Exchange H & L with D & E
 				exchangeDEHL()
 				cycles += 1
 				pc += 1
+				break
 			// STACK, I/O, MACHINE CONTROL
+			case 0xAF: str += "EI" //Enable interrupts
+				enableInterrupts()
+				cycles += 1
+				pc += 1
+				break
 			case 0xC1: str += "POP B"
 				popOffStack(reg: &B)
 				cycles += 3
 				pc += 1
+				break
 			case 0xC5: str += "PUSH B"
 				pushOnStack(reg: &B)
 				cycles += 3
 				pc += 1
+				break
 			case 0xD1: str += "POP D"
 				popOffStack(reg: &D)
 				cycles += 3
 				pc += 1
+				break
 			case 0xD3: str += "OUT #$\(byte2)" //Output
 				outputTo(port: Int(byte2, radix:16)!)
 				cycles += 3
 				pc += 2
+				break
 			case 0xD5: str += "PUSH D" //Push register pair D & E on stack
 				pushOnStack(reg: &D)
 				cycles += 3
@@ -296,6 +328,7 @@ class CZKBaito8080: NSObject {
 				popOffStack(reg: &H)
 				cycles += 3
 				pc += 1
+				break
 			case 0xE5: str += "PUSH H"
 				pushOnStack(reg: &H)
 				cycles += 3
@@ -305,6 +338,7 @@ class CZKBaito8080: NSObject {
 				popProcessorStatusWord()
 				cycles += 3
 				pc += 1
+				break
 			case 0xf5: str += "PUSH PSW"
 				pushProcessorStatusWord()
 				cycles += 3
@@ -315,6 +349,15 @@ class CZKBaito8080: NSObject {
 		}
 		addOutput(res: str)
 		instCount += 1
+		handleInterrupts()
+	}
+
+	func handleInterrupts() {
+		if (IE > 1) {
+			IE -= 1
+		} else if (IE == 1) {
+			//Handle
+		}
 	}
 
 	//MARK: Flags
@@ -420,6 +463,14 @@ class CZKBaito8080: NSObject {
 
 	func addInmediate(inm: UInt8) {
 		A = setUpdatingFlags(value: Int(A)+Int(inm), clearCarry: false)
+	}
+
+	func exclusiveOr(reg: UnsafeMutablePointer<UInt8>) {
+		if (reg.successor() == &B) { //Swift enforces exclusive access. This can be disabled or "dirty-fixed" this way.
+			reg.pointee = setUpdatingFlags(value: Int(reg.pointee ^ reg.pointee), clearCarry: true)
+		} else {
+			A = setUpdatingFlags(value: Int(A ^ reg.pointee), clearCarry: true)
+		}
 	}
 
 	//MARK: BRANCH functions
@@ -539,6 +590,10 @@ class CZKBaito8080: NSObject {
 
 	func outputTo(port: Int) {
 		//TODO: Shifting, sound, etc.
+	}
+
+	func enableInterrupts() {
+		IE = 3
 	}
 
 	//MARK: - Interaction

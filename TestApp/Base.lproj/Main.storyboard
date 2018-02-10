@@ -849,7 +849,6 @@
                         <outlet property="codeTextView" destination="gXi-cb-P3d" id="S0G-GK-dJY"/>
                         <outlet property="stateTextView" destination="uzy-Dn-FSd" id="oe1-Ao-pU4"/>
                         <outlet property="stepButton" destination="EVZ-Zo-6BY" id="pgv-Xn-WYn"/>
-                        <outlet property="stepLabel" destination="sEd-ID-XJB" id="FHG-BC-cko"/>
                         <outlet property="stepTextField" destination="btC-dE-MfH" id="efe-ng-tYH"/>
                     </connections>
                 </viewController>
