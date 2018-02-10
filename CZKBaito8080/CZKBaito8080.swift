@@ -137,6 +137,11 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 				break
+			case 0xA7: str += "ANA A"
+				andRegister(reg: &A)
+				cycles += 1
+				pc += 1
+				break
 			case 0xAF: str += "XRA A" //XOR A with A
 				exclusiveOr(reg: &A)
 				cycles += 1
@@ -294,11 +299,6 @@ class CZKBaito8080: NSObject {
 				pc += 1
 				break
 			// STACK, I/O, MACHINE CONTROL
-			case 0xAF: str += "EI" //Enable interrupts
-				enableInterrupts()
-				cycles += 1
-				pc += 1
-				break
 			case 0xC1: str += "POP B"
 				popOffStack(reg: &B)
 				cycles += 3
@@ -344,6 +344,11 @@ class CZKBaito8080: NSObject {
 				cycles += 3
 				pc += 1
 				break
+			case 0xFB: str += "EI" //Enable interrupts
+				enableInterrupts()
+				cycles += 1
+				pc += 1
+			break
 			default: str += "\(String(array[pc],radix:16)) ***No implementada***"
 				pc += 1
 		}
@@ -470,6 +475,14 @@ class CZKBaito8080: NSObject {
 			reg.pointee = setUpdatingFlags(value: Int(reg.pointee ^ reg.pointee), clearCarry: true)
 		} else {
 			A = setUpdatingFlags(value: Int(A ^ reg.pointee), clearCarry: true)
+		}
+	}
+
+	func andRegister(reg: UnsafeMutablePointer<UInt8>) {
+		if (reg.successor() == &B) {
+			reg.pointee = setUpdatingFlags(value: Int(reg.pointee & reg.pointee), clearCarry: true)
+		} else {
+			A = setUpdatingFlags(value: Int(A & reg.pointee), clearCarry: true)
 		}
 	}
 
