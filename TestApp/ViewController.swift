@@ -8,12 +8,13 @@
 
 import Cocoa
 
-class ViewController: NSViewController {
+class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSource {
 
 	@IBOutlet weak var codeTextView: NSTextView!
 	@IBOutlet weak var stateTextView: NSTextView!
 	@IBOutlet weak var stepTextField: NSTextField!
 	@IBOutlet weak var stepButton: NSButton!
+	@IBOutlet weak var memoryTableView: NSTableView!
 
 	var selectedFilePath: String?
 
@@ -22,7 +23,9 @@ class ViewController: NSViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		codeTextView.string += "\n"
-		// Do any additional setup after loading the view.
+		memoryTableView.delegate = self
+		memoryTableView.dataSource = self
+		updateRegsView()
 	}
 
 	override var representedObject: Any? {
@@ -104,6 +107,31 @@ class ViewController: NSViewController {
 		regsStr += "Instr: \(AppDelegate.machine.instCount)  Cycles: \(AppDelegate.machine.cycles)\nCPI: \(cpi)"
 		stateTextView.string = regsStr
 		codeTextView.scrollToEndOfDocument(self)
+		memoryTableView.reloadData()
+	}
+
+	func numberOfRows(in tableView: NSTableView) -> Int {
+		return AppDelegate.machine.array.count
+	}
+
+	func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+		let item = AppDelegate.machine.array[row]
+		var cellIdentifier = ""
+		var cellText = ""
+
+		if (tableColumn == tableView.tableColumns[0]) {
+			cellIdentifier = "AddressCell"
+			cellText = "0x"+String(row,radix:16)
+		} else {
+			cellIdentifier = "ContentCell"
+			cellText = String(item,radix:16)
+		}
+
+		if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: cellIdentifier), owner: self) as? NSTableCellView {
+			cell.textField?.stringValue = cellText
+			return cell
+		}
+		return nil
 	}
 
 }

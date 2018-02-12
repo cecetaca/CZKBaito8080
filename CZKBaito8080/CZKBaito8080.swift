@@ -67,7 +67,7 @@ class CZKBaito8080: NSObject {
 		//Bytes contained in the file (length/bytesize)
 		let count = fileData.length / MemoryLayout<UInt8>.size
 
-		array = [UInt8](repeating: 0, count: count+16000) //ROM+RAM
+		array = [UInt8](repeating: 0, count: count+0x4000) //ROM+RAM+Mirror (Taito machine hardware)
 		fileData.getBytes(&array, length:count * MemoryLayout<UInt8>.size)
 	}
 
@@ -152,7 +152,7 @@ class CZKBaito8080: NSObject {
 				cycles += 2
 				pc += 2
 				break
-			case 0xE6: str += "ANI"
+		case 0xE6: str += "ANI #$\(byte2)"
 				andInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
@@ -263,8 +263,8 @@ class CZKBaito8080: NSObject {
 				cycles += 2
 				pc += 1
 				break
-			case 0x6F: str += "MOV A, L" //Move register to register (r1) <- (r2)
-				moveRegister(reg: &L, toRegister: &A)
+			case 0x6F: str += "MOV L, A" //Move register to register (r1) <- (r2)
+				moveRegister(reg: &A, toRegister: &L)
 				cycles += 1
 				pc += 1
 				break
