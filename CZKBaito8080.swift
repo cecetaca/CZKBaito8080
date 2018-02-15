@@ -36,6 +36,7 @@ extension String {
 
 class CZKBaito8080: NSObject {
 
+	//Registers
 	var pc = 0
 	var SP = 0
 	var A: UInt8 = 0
@@ -46,6 +47,7 @@ class CZKBaito8080: NSObject {
 	var H: UInt8 = 0
 	var L: UInt8 = 0
 
+	//Flags
 	var IE = 0
 	var Z = 0
 	var S = 0
@@ -53,11 +55,13 @@ class CZKBaito8080: NSObject {
 	var CY = 0
 	var AC = 0
 
+
 	var array = [UInt8]()
 	var output = ""
 	var cycles = 0
 	var instCount = 0
 	var running = false
+	var interruptToHandle = 0
 
 
 	init(filePath: String) {
@@ -362,6 +366,10 @@ class CZKBaito8080: NSObject {
 			IE -= 1
 		} else if (IE == 1) {
 			//Handle
+			if (interruptToHandle != 0) {
+				callException(inm: 8*interruptToHandle)
+				interruptToHandle = 0
+			}
 		}
 	}
 
@@ -602,12 +610,13 @@ class CZKBaito8080: NSObject {
 	}
 
 	func outputTo(port: Int) {
-		//TODO: Shifting, sound, etc.
+		//Implemented in specific machine.
 	}
 
 	func enableInterrupts() {
 		IE = 3
 	}
+
 
 	//MARK: - Interaction
 	func step() {
@@ -621,9 +630,7 @@ class CZKBaito8080: NSObject {
 			running = true
 			let wishedCycle = cycles + specifiedCycles
 			while (cycles < wishedCycle) {
-				if (pc < array.count) {
-					disassemble()
-				}
+				step()
 			}
 			running = false
 		}
