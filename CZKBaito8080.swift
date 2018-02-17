@@ -89,23 +89,19 @@ class CZKBaito8080: NSObject {
 			case 0: str += "NOP"
 				cycles += 1
 				pc += 1
-				break
 			// ALU
 			case 0x05: str += "DCR B" //Decrement register B
 				decrementRegister(reg: &B)
 				cycles += 1
 				pc += 1
-				break
 			case 0x09: str += "DAD B" //Add B & C to H & L
 				addRegisterPairToHL(reg: &B)
 				cycles += 3
 				pc += 1
-				break
 			case 0x0D: str += "DCR C" //Decrement register C
 				decrementRegister(reg: &C)
 				cycles += 1
 				pc += 1
-				break
 			case 0x0F: str += "RRC" //Rotate right
 				rotateRight()
 				cycles += 1
@@ -115,244 +111,196 @@ class CZKBaito8080: NSObject {
 				incrementRegisterPair(reg: &D)
 				cycles += 1
 				pc += 1
-				break
 			case 0x19: str += "DAD D" //Add D & E to H & L
 				addRegisterPairToHL(reg: &D)
 				cycles += 3
 				pc += 1
-				break
 			case 0x24: str += "INR H" //Increment register
 				incrementRegister(reg: &H)
 				cycles += 1
 				pc += 1
-				break
 			case 0x23: str += "INX H" //Increment H & L register pair
 				incrementRegisterPair(reg: &H)
 				cycles += 1
 				pc += 1
-				break
 			case 0x29: str += "DAD H" //Add H & L to H & L
 				addRegisterPairToHL(reg: &H)
 				cycles += 3
 				pc += 1
-				break
 			case 0x80: str += "ADD B"
 				addRegister(reg: &B)
 				cycles += 1
 				pc += 1
-				break
 			case 0xA7: str += "ANA A"
 				andRegister(reg: &A)
 				cycles += 1
 				pc += 1
-				break
 			case 0xAF: str += "XRA A" //XOR A with A
 				exclusiveOr(reg: &A)
 				cycles += 1
 				pc += 1
-				break
 			case 0xC6: str += "ADI #$\(byte2)"
 				addInmediate(inm: UInt8(byte2, radix:16)!)
 				cycles += 2
 				pc += 2
-				break
 		case 0xE6: str += "ANI #$\(byte2)"
 				andInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
-				break
 			case 0xFE: str += "CPI #$\(byte2)" // Compare inmediate to (A)ccumulator
 				compareInmediate(inm: UInt8(byte2)!)
 				cycles += 2
 				pc += 2
-				break
 
 
 			// BRANCH
 			case 195: str += "JMP $\(String(array[pc+2],radix:16))\(String(array[pc+1],radix:16))"
 				jumpInmediate(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
-				break
 			case 0xC2: str += "JNZ $\(byte3)\(byte2)"
 				jumpNotZero(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
-				break
 			case 0xC9: str += "RET"
 				returnFromException()
 				cycles += 3
-				break
 			case 0xCD: str += "CALL $\(byte3)\(byte2)" //Call unconditional addr
 				callException(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 5
-				break
 
 			// DATA TRANSFER
 			case 0x01: str += "LXI B, #$\(byte3)\(byte2)" //Load inmediate register pair B & C
 				loadInmediateRegisterPair(reg: &B, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte3,radix:16)!)
 				cycles += 3
 				pc += 3
-				break
 			case 0x06: str += "MVI B, #$\(byte2)" //Move inmediate
 				moveInmediate(reg: &B, inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
-				break
 			case 0x0A: str += "LDAX B" //Load (A)ccumulator indirect
 				loadAccumulatorIndirect(reg: &B)
 				cycles += 2
 				pc += 1
-				break
 			case 0x0E: str += "MVI C, #$\(byte2)" //Move inmediate
 				moveInmediate(reg: &C, inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
-				break
 			case 0x11: str += "LXI D, #$\(byte3)\(byte2)" //Load inmediate register pair D & E
 				loadInmediateRegisterPair(reg: &D, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
 				cycles += 3
 				pc += 3
-				break
 			case 0x1A: str += "LDAX D" //Load (A)ccumulator indirect
 				loadAccumulatorIndirect(reg: &D)
 				cycles += 2
 				pc += 1
-				break
 			case 0x21: str += "LXI H, #$\(byte3)\(byte2)" //Load inmediate register pair H & L
 				loadInmediateRegisterPair(reg: &H, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
 				cycles += 3
 				pc += 3
-				break
 			case 0x26: str += "MVI H, #$\(byte2)" //Move inmediate
 				moveInmediate(reg: &H, inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
-				break
 			case 0x31: str += "LXI SP, #$\(byte3)\(byte2)" //Load inmediate stack pointer
 				SP = Int("\(byte3)\(byte2)",radix:16)!
 				cycles += 3
 				pc += 3
-				break
 			case 0x32: str += "STA" //Store A(ccumulator) direct
 				storeAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
 				pc += 3
-				break
 			case 0x36: str += "MVI M, #$\(byte2)" //Move to memory inmediate
 				moveToMemory(inm: UInt8(byte2,radix:16)!)
 				cycles += 3
 				pc += 2
-				break
 			case 0x3A: str += "LDA $\(byte3)\(byte2)" //Load (A)ccumulator direct
 				loadAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
 				pc += 3
-				break
 			case 0x3E: str += "MVI A, #$\(byte2)" //Move inmediate to A
 				moveInmediate(reg: &A, inm: UInt8(byte2, radix:16)!)
 				cycles += 2
 				pc += 2
-				break
 			case 0x56: str += "MOV D, M" //Move from memory
 				moveFromMemory(reg: &D)
 				cycles += 2
 				pc += 1
-				break
 			case 0x5E: str += "MOV E, M" //Move from memory
 				moveFromMemory(reg: &E)
 				cycles += 2
 				pc += 1
-				break
 			case 0x66: str += "MOV H, M" //Move from memory
 				moveFromMemory(reg: &H)
 				cycles += 2
 				pc += 1
-				break
 			case 0x6F: str += "MOV L, A" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &A, toRegister: &L)
 				cycles += 1
 				pc += 1
-				break
 			case 0x77: str += "MOV M, A" //Move register to memory
 				moveToMemory(reg: &A)
 				cycles += 2
 				pc += 1
-				break
 			case 0x7A: str += "MOV A, D" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &D, toRegister: &A)
 				cycles += 1
 				pc += 1
-				break
 			case 0x7B: str += "MOV A, E"
 				moveRegister(reg: &E, toRegister: &A)
 				cycles += 1
 				pc += 1
-				break
 			case 0x7C: str += "MOV A, H" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &H, toRegister: &A)
 				cycles += 1
 				pc += 1
-				break
 			case 0x7E: str += "MOV A, M" //Move from memory
 				moveFromMemory(reg: &A)
 				cycles += 2
 				pc += 1
-				break
 			case 0xEB: str += "XCHG" //Exchange H & L with D & E
 				exchangeDEHL()
 				cycles += 1
 				pc += 1
-				break
 			// STACK, I/O, MACHINE CONTROL
 			case 0xC1: str += "POP B"
 				popOffStack(reg: &B)
 				cycles += 3
 				pc += 1
-				break
 			case 0xC5: str += "PUSH B"
 				pushOnStack(reg: &B)
 				cycles += 3
 				pc += 1
-				break
 			case 0xD1: str += "POP D"
 				popOffStack(reg: &D)
 				cycles += 3
 				pc += 1
-				break
 			case 0xD3: str += "OUT #$\(byte2)" //Output
 				outputTo(port: Int(byte2, radix:16)!)
 				cycles += 3
 				pc += 2
-				break
 			case 0xD5: str += "PUSH D" //Push register pair D & E on stack
 				pushOnStack(reg: &D)
 				cycles += 3
 				pc += 1
-				break
 			case 0xE1: str += "POP H"
 				popOffStack(reg: &H)
 				cycles += 3
 				pc += 1
-				break
 			case 0xE5: str += "PUSH H"
 				pushOnStack(reg: &H)
 				cycles += 3
 				pc += 1
-				break
 			case 0xF1: str += "POP PSW"
 				popProcessorStatusWord()
 				cycles += 3
 				pc += 1
-				break
 			case 0xf5: str += "PUSH PSW"
 				pushProcessorStatusWord()
 				cycles += 3
 				pc += 1
-				break
 			case 0xFB: str += "EI" //Enable interrupts
 				enableInterrupts()
 				cycles += 1
 				pc += 1
-			break
 			default: str += "\(String(array[pc],radix:16)) ***No implementada***"
 				pc += 1
 		}
