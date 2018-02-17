@@ -12,7 +12,7 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
 	//Inits machine with default path I set for debugging. You should probably change this.
-	static var machine = CZKBaito8080(filePath:"~/invaders/invaders")
+	static var machine = CZKBaito8080TaitoMachine(filePath:"~/invaders/invaders")
 
 
 	func applicationDidFinishLaunching(_ aNotification: Notification) {

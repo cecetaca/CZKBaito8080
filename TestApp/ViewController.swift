@@ -38,7 +38,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
 		if (selectedFilePath == nil) {
 			selectFileClicked(self)
 		} else {
-			AppDelegate.machine = CZKBaito8080(filePath:selectedFilePath!)
+			AppDelegate.machine = CZKBaito8080TaitoMachine(filePath:selectedFilePath!)
 		}
 		stateTextView.string = ""
 		codeTextView.string = ""
@@ -47,17 +47,18 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
 
 	@IBAction func runButtonClicked(_ sender: Any) {
 		// Run at specified frequency and the right cycles.
-		/*let timer = Timer.scheduledTimer(withTimeInterval: 0.001, repeats: true) { (tm) in
+		Timer.scheduledTimer(withTimeInterval: 0.001, repeats: true) { (tm) in
 			DispatchQueue.global(qos: .background).async {
-				AppDelegate.machine.run(specifiedCycles: 2000)
+				AppDelegate.machine.run(specifiedCycles:Int(AppDelegate.machine.freqMHz)*1000)
 				DispatchQueue.main.sync {
 					self.cpi = Double(AppDelegate.machine.cycles) / Double(AppDelegate.machine.instCount)
 					self.codeTextView.string = AppDelegate.machine.output
 					self.updateRegsView()
 				}
 			}
-		} */
-		
+		}
+		let outputWindow = self.storyboard?.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier(rawValue: "OutputWindow")) as! NSWindowController
+		outputWindow.showWindow(self)
 	}
 
 	@IBAction func stepButtonClicked(_ sender: Any) {

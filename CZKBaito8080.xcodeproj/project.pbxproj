@@ -16,6 +16,9 @@
 		394A1B2E1FC75A590008BAB7 /* invaders.h in Resources */ = {isa = PBXBuildFile; fileRef = 394A1B271FC759DE0008BAB7 /* invaders.h */; };
 		394A1B2F1FC75A5D0008BAB7 /* invaders.f in Resources */ = {isa = PBXBuildFile; fileRef = 394A1B281FC759DE0008BAB7 /* invaders.f */; };
 		394FF9862031B8E800638D4E /* czkbaito8080_testapp_screenshot.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = 394FF9852031B8E800638D4E /* czkbaito8080_testapp_screenshot.jpeg */; };
+		394FF9892031C31600638D4E /* CZKBaito8080TaitoMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394FF9882031C31600638D4E /* CZKBaito8080TaitoMachine.swift */; };
+		394FF98B2031C71A00638D4E /* CZKBaito8080TaitoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394FF98A2031C71A00638D4E /* CZKBaito8080TaitoViewController.swift */; };
+		394FFE4B2033197700CFDDE2 /* CZKBaito8080OutputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394FFE4A2033197700CFDDE2 /* CZKBaito8080OutputView.swift */; };
 		39C4961220163EF300E890A7 /* CZKBaito8080.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C4961120163EF300E890A7 /* CZKBaito8080.swift */; };
 		39D375F1201FB65D0026B793 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 39D375F0201FB65D0026B793 /* .gitignore */; };
 		39D510661FCC49EE001FC410 /* invaders in Resources */ = {isa = PBXBuildFile; fileRef = 39D510651FCC49EE001FC410 /* invaders */; };
@@ -34,6 +37,9 @@
 		394A1B281FC759DE0008BAB7 /* invaders.f */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.fortran; path = invaders.f; sourceTree = "<group>"; };
 		394A1B291FC759DE0008BAB7 /* invaders.e */ = {isa = PBXFileReference; lastKnownFileType = file; path = invaders.e; sourceTree = "<group>"; };
 		394FF9852031B8E800638D4E /* czkbaito8080_testapp_screenshot.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = czkbaito8080_testapp_screenshot.jpeg; sourceTree = "<group>"; };
+		394FF9882031C31600638D4E /* CZKBaito8080TaitoMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CZKBaito8080TaitoMachine.swift; sourceTree = "<group>"; };
+		394FF98A2031C71A00638D4E /* CZKBaito8080TaitoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CZKBaito8080TaitoViewController.swift; sourceTree = "<group>"; };
+		394FFE4A2033197700CFDDE2 /* CZKBaito8080OutputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CZKBaito8080OutputView.swift; sourceTree = "<group>"; };
 		39C4961120163EF300E890A7 /* CZKBaito8080.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CZKBaito8080.swift; sourceTree = "<group>"; };
 		39D375F0201FB65D0026B793 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = SOURCE_ROOT; };
 		39D510651FCC49EE001FC410 /* invaders */ = {isa = PBXFileReference; lastKnownFileType = file; path = invaders; sourceTree = "<group>"; };
@@ -54,8 +60,9 @@
 			isa = PBXGroup;
 			children = (
 				394A1B251FC759DE0008BAB7 /* invaders */,
+				39C4961120163EF300E890A7 /* CZKBaito8080.swift */,
+				394FF9882031C31600638D4E /* CZKBaito8080TaitoMachine.swift */,
 				39D375EF201FB3080026B793 /* TestApp */,
-				394A1B141FC759A10008BAB7 /* CZKBaito8080 */,
 				394A1B131FC759A10008BAB7 /* Products */,
 				394FF9872031B8EC00638D4E /* Images */,
 			);
@@ -67,14 +74,6 @@
 				394A1B121FC759A10008BAB7 /* CZKBaito8080.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		394A1B141FC759A10008BAB7 /* CZKBaito8080 */ = {
-			isa = PBXGroup;
-			children = (
-				39C4961120163EF300E890A7 /* CZKBaito8080.swift */,
-			);
-			path = CZKBaito8080;
 			sourceTree = "<group>";
 		};
 		394A1B251FC759DE0008BAB7 /* invaders */ = {
@@ -102,6 +101,8 @@
 			children = (
 				394A1B151FC759A20008BAB7 /* AppDelegate.swift */,
 				394A1B171FC759A20008BAB7 /* ViewController.swift */,
+				394FF98A2031C71A00638D4E /* CZKBaito8080TaitoViewController.swift */,
+				394FFE4A2033197700CFDDE2 /* CZKBaito8080OutputView.swift */,
 				39D375F0201FB65D0026B793 /* .gitignore */,
 				394A1B191FC759A20008BAB7 /* Assets.xcassets */,
 				394A1B1B1FC759A20008BAB7 /* Main.storyboard */,
@@ -195,7 +196,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				394A1B181FC759A20008BAB7 /* ViewController.swift in Sources */,
+				394FF98B2031C71A00638D4E /* CZKBaito8080TaitoViewController.swift in Sources */,
 				394A1B161FC759A20008BAB7 /* AppDelegate.swift in Sources */,
+				394FF9892031C31600638D4E /* CZKBaito8080TaitoMachine.swift in Sources */,
+				394FFE4B2033197700CFDDE2 /* CZKBaito8080OutputView.swift in Sources */,
 				39C4961220163EF300E890A7 /* CZKBaito8080.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
