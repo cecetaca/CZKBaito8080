@@ -8,14 +8,18 @@ If you feel like checking it out right now, I recommend using the original ã‚¿ã‚
 The reason: I'm iterating through the instructions of that particular file and implementing them one by one.
 
 ## Structure
-The actual "machine", as I called it, consists of:
+The actual "machine core", as I called it, consists of:
 * **Functions** implementing the instructions.
 * **Data structures** holding everything in place (the registers and flags as variables, memory as an array), might change them in the future with a better approach.
 * **REPL** that goes through each byte, printing the corresponding instruction and calling its function, and also advancing the program counter as needed.
 
 There is also a primitive **Cocoa "test app"**, which is basically a View Controller with the ability to call the "machine", allowing you to step through the execution. 
 It's kind of useful, because you can see the values of the registers and flags as they change and so on.
-Running the whole thing is logically not supported yet, as the subset of the instruction set is not yet complete.
+
+![screenshot](Images/czkbaito8080_testapp_screenshot.jpeg "CZKBaito8080 Test App Screenshot")
+
+Machines built on top of the machine core have their own class. (Example: TaitoMachine.swift)
+The processor is the same, but each system has its own hardware configuration and "tricks" apart from that. For example, the Space Invaders machine has a special 2-byte shift register used to perform some operations quickly.
 
 ## WIP and to-do (Ordered by priority)
 1. Finishing the actual i8080 instruction set.
