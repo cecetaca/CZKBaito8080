@@ -281,6 +281,10 @@ class CZKBaito8080: NSObject {
 				pushOnStack(reg: &D)
 				cycles += 3
 				pc += 1
+			case 0xDB: str += "IN #$\(byte2)" //Input
+				inputIn(port: Int(byte2, radix:16)!)
+				cycles += 3
+				pc += 2
 			case 0xE1: str += "POP H"
 				popOffStack(reg: &H)
 				cycles += 3
@@ -558,6 +562,10 @@ class CZKBaito8080: NSObject {
 	}
 
 	func outputTo(port: Int) {
+		//Implemented in specific machine.
+	}
+
+	func inputIn(port: Int) {
 		//Implemented in specific machine.
 	}
 

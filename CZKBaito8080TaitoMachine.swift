@@ -21,6 +21,9 @@ class CZKBaito8080TaitoMachine: CZKBaito8080 {
 	var lastRefresh = DispatchTime.now()
 	var lastInterrupt = 2
 
+	var shiftRegister: UInt16 = 0
+	var shiftOffset: UInt8 = 0
+
 
 	override func handleInterrupts() {
 		if (IE == 1 && DispatchTime.now() >= lastRefresh+(1.0/refreshRateHz)) {
@@ -36,7 +39,22 @@ class CZKBaito8080TaitoMachine: CZKBaito8080 {
 
 
 	override func outputTo(port: Int) {
-		
+		var hShift = UInt8((shiftRegister & 0xFF00) >> 8)
+		var lShift = UInt8(shiftRegister & 0x00FF)
+		if (port ==  2) {
+			shiftOffset = 0x7 & A
+		} else if (port == 4) {
+			lShift = hShift
+			hShift = A
+			shiftRegister = UInt16("\(String(hShift, radix:16))\(String(lShift, radix:16))", radix: 16)!
+		}
+	}
+
+	override func inputIn(port: Int) {
+		if (port == 3) {
+			let actualShift = UInt8(8) - shiftOffset
+			A = UInt8(shiftRegister >> actualShift) & 0xFF
+		}
 	}
 
 }
