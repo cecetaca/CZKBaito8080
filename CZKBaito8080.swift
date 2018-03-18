@@ -127,6 +127,10 @@ class CZKBaito8080: NSObject {
 				addRegisterPairToHL(reg: &H)
 				cycles += 3
 				pc += 1
+			case 0x3D: str += "DCR A"
+				decrementRegister(reg: &A)
+				cycles += 1
+				pc += 1
 			case 0x80: str += "ADD B"
 				addRegister(reg: &B)
 				cycles += 1
@@ -163,9 +167,15 @@ class CZKBaito8080: NSObject {
 			case 0xC9: str += "RET"
 				returnFromException()
 				cycles += 3
+			case 0xCA: str += "JZ $\(byte3)\(byte2)"
+				jumpOnZero(inm: Int(byte3+byte2,radix:16)!)
+				cycles += 3
 			case 0xCD: str += "CALL $\(byte3)\(byte2)" //Call unconditional addr
 				callException(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 5
+			case 0xD2: str += "JNC $\(byte3)\(byte2)"
+				jumpNoCarry(inm: Int(byte3+byte2,radix:16)!)
+				cycles += 3
 
 			// DATA TRANSFER
 			case 0x01: str += "LXI B, #$\(byte3)\(byte2)" //Load inmediate register pair B & C
@@ -474,6 +484,22 @@ class CZKBaito8080: NSObject {
 		array[SP-2] = PCL
 		SP -= 2
 		jumpInmediate(inm: inm)
+	}
+
+	func jumpOnZero(inm: Int) {
+		if (Z == 1) {
+			jumpInmediate(inm: inm)
+		} else {
+			pc += 3
+		}
+	}
+
+	func jumpNoCarry(inm: Int) {
+		if (CY == 0) {
+			jumpInmediate(inm: inm)
+		} else {
+			pc += 3
+		}
 	}
 
 	//MARK: DATA TRANSFER functions
