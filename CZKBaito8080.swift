@@ -92,6 +92,10 @@ class CZKBaito8080: NSObject {
 				cycles += 1
 				pc += 1
 			// ALU
+			case 0x03: str += "INX B"
+				incrementRegisterPair(reg: &B)
+				cycles += 1
+				pc += 1
 			case 0x05: str += "DCR B" //Decrement register B
 				decrementRegister(reg: &B)
 				cycles += 1
@@ -136,6 +140,10 @@ class CZKBaito8080: NSObject {
 			case 0x35: str += "DCR M"
 				decrementMemory()
 				cycles += 3
+				pc += 1
+			case 0x37: str += "STC"
+				CY = 1
+				cycles += 1
 				pc += 1
 			case 0x3D: str += "DCR A"
 				decrementRegister(reg: &A)
@@ -190,6 +198,8 @@ class CZKBaito8080: NSObject {
 			case 0xD2: str += "JNC $\(byte3)\(byte2)"
 				jumpNoCarry(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
+			case 0xD8: str += "RC"
+				retOnCarry()
 			case 0xDA: str += "JC $\(byte3)\(byte2)"
 				jumpOnCarry(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
@@ -246,17 +256,33 @@ class CZKBaito8080: NSObject {
 				moveInmediate(reg: &A, inm: UInt8(byte2, radix:16)!)
 				cycles += 2
 				pc += 2
+			case 0x4F: str += "MOV C, A"
+				moveRegister(reg: &A, toRegister: &C)
+				cycles += 1
+				pc += 1
 			case 0x56: str += "MOV D, M" //Move from memory
 				moveFromMemory(reg: &D)
 				cycles += 2
+				pc += 1
+			case 0x57: str += "MOV D, A"
+				moveRegister(reg: &A, toRegister: &D)
+				cycles += 1
 				pc += 1
 			case 0x5E: str += "MOV E, M" //Move from memory
 				moveFromMemory(reg: &E)
 				cycles += 2
 				pc += 1
+			case 0x5F: str += "MOV E, A"
+				moveRegister(reg: &A, toRegister: &E)
+				cycles += 1
+				pc += 1
 			case 0x66: str += "MOV H, M" //Move from memory
 				moveFromMemory(reg: &H)
 				cycles += 2
+				pc += 1
+			case 0x67: str += "MOV H, A"
+				moveRegister(reg: &A, toRegister: &H)
+				cycles += 1
 				pc += 1
 			case 0x6F: str += "MOV L, A" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &A, toRegister: &L)
@@ -521,6 +547,16 @@ class CZKBaito8080: NSObject {
 
 	func retNoZero() {
 		if (Z == 0) {
+			returnFromException()
+			cycles += 3
+		} else {
+			cycles += 1
+			pc += 1
+		}
+	}
+
+	func retOnCarry() {
+		if (C == 1) {
 			returnFromException()
 			cycles += 3
 		} else {
