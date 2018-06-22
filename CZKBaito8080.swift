@@ -71,7 +71,7 @@ class CZKBaito8080: NSObject {
 		//Bytes contained in the file (length/bytesize)
 		let count = fileData.length / MemoryLayout<UInt8>.size
 
-		array = [UInt8](repeating: 0, count: count+0x4000) //ROM+RAM+Mirror (Taito machine hardware)
+		array = [UInt8](repeating: 0, count: count+0x6000) //ROM+RAM+Mirror (Taito machine hardware)
 		fileData.getBytes(&array, length:count * MemoryLayout<UInt8>.size)
 	}
 
@@ -83,6 +83,8 @@ class CZKBaito8080: NSObject {
 
 		let byte2 = String(array[pc+1],radix:16).formatByteZeroes
 		let byte3 = String(array[pc+2],radix:16).formatByteZeroes
+
+		handleInterrupts()
 
 		switch (array[pc]) {
 
@@ -123,8 +125,16 @@ class CZKBaito8080: NSObject {
 				incrementRegisterPair(reg: &H)
 				cycles += 1
 				pc += 1
+			case 0x27: str += "DAA" //Decimal Adjust Accumulator
+				decimalAdjust(reg: &A)
+				cycles += 1
+				pc += 1
 			case 0x29: str += "DAD H" //Add H & L to H & L
 				addRegisterPairToHL(reg: &H)
+				cycles += 3
+				pc += 1
+			case 0x35: str += "DCR M"
+				decrementMemory()
 				cycles += 3
 				pc += 1
 			case 0x3D: str += "DCR A"
@@ -152,7 +162,7 @@ class CZKBaito8080: NSObject {
 				cycles += 2
 				pc += 2
 			case 0xFE: str += "CPI #$\(byte2)" // Compare inmediate to (A)ccumulator
-				compareInmediate(inm: UInt8(byte2)!)
+				compareInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
 
@@ -161,9 +171,13 @@ class CZKBaito8080: NSObject {
 			case 195: str += "JMP $\(String(array[pc+2],radix:16))\(String(array[pc+1],radix:16))"
 				jumpInmediate(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
+			case 0xC0: str += "RNZ"
+				retNoZero()
 			case 0xC2: str += "JNZ $\(byte3)\(byte2)"
 				jumpNotZero(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
+			case 0xC8: str += "RZ"
+				retOnZero()
 			case 0xC9: str += "RET"
 				returnFromException()
 				cycles += 3
@@ -176,10 +190,12 @@ class CZKBaito8080: NSObject {
 			case 0xD2: str += "JNC $\(byte3)\(byte2)"
 				jumpNoCarry(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
-
+			case 0xDA: str += "JC $\(byte3)\(byte2)"
+				jumpOnCarry(inm: Int(byte3+byte2,radix:16)!)
+				cycles += 3
 			// DATA TRANSFER
 			case 0x01: str += "LXI B, #$\(byte3)\(byte2)" //Load inmediate register pair B & C
-				loadInmediateRegisterPair(reg: &B, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte3,radix:16)!)
+				loadInmediateRegisterPair(reg: &B, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
 				cycles += 3
 				pc += 3
 			case 0x06: str += "MVI B, #$\(byte2)" //Move inmediate
@@ -214,7 +230,7 @@ class CZKBaito8080: NSObject {
 				SP = Int("\(byte3)\(byte2)",radix:16)!
 				cycles += 3
 				pc += 3
-			case 0x32: str += "STA" //Store A(ccumulator) direct
+		case 0x32: str += "STA #$\(byte3)\(byte2)" //Store A(ccumulator) direct
 				storeAccumulatorDirect(addr: Int("\(byte3)\(byte2)", radix:16)!)
 				cycles += 4
 				pc += 3
@@ -320,7 +336,7 @@ class CZKBaito8080: NSObject {
 		}
 		addOutput(res: str)
 		instCount += 1
-		handleInterrupts()
+
 	}
 
 	func handleInterrupts() {
@@ -329,7 +345,7 @@ class CZKBaito8080: NSObject {
 		} else if (IE == 1) {
 			//Handle
 			if (interruptToHandle != 0) {
-				callException(inm: 8*interruptToHandle)
+				callInterrupt(inm: 8*interruptToHandle)
 				interruptToHandle = 0
 			}
 		}
@@ -380,6 +396,11 @@ class CZKBaito8080: NSObject {
 	func decrementRegister(reg:UnsafeMutablePointer<UInt8>) {
 		let res = Int(reg.pointee) - 1
 		reg.pointee = setUpdatingFlags(value: res, clearCarry: false)
+	}
+
+	func decrementMemory() {
+		let res = array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!]
+		array[Int("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)",radix:16)!] = setUpdatingFlags(value: Int(res) - 1, clearCarry: false)
 	}
 
 	func incrementRegisterPair(reg:UnsafeMutablePointer<UInt8>) {
@@ -456,6 +477,18 @@ class CZKBaito8080: NSObject {
 		}
 	}
 
+	func decimalAdjust(reg: UnsafeMutablePointer<UInt8>) {
+		if (AC == 1 || (reg.pointee & 0x0F) > 9) {
+			reg.pointee += 6
+		}
+		var msb = reg.pointee & 0xF0
+		msb = msb >> 4
+		if (CY == 1 || msb > 9) {
+			msb = msb + 6
+		}
+		reg.pointee = setUpdatingFlags(value: Int((msb << 4) & reg.pointee), clearCarry: false)
+	}
+
 	//MARK: BRANCH functions
 	func jumpInmediate(inm: Int) {
 		pc = inm
@@ -473,11 +506,41 @@ class CZKBaito8080: NSObject {
 		let PCL = String(array[SP],radix:16)
 		let PCH = String(array[SP+1],radix:16)
 		SP += 2
-		pc = Int("\(PCH)\(PCL)",radix:16)!
+		pc = Int("\(String(PCH).formatByteZeroes)\(String(PCL).formatByteZeroes)",radix:16)!
+	}
+
+	func retOnZero() {
+		if (Z == 1) {
+			returnFromException()
+			cycles += 3
+		} else {
+			cycles += 1
+			pc += 1
+		}
+	}
+
+	func retNoZero() {
+		if (Z == 0) {
+			returnFromException()
+			cycles += 3
+		} else {
+			cycles += 1
+			pc += 1
+		}
 	}
 
 	func callException(inm: Int) {
 		let pc16 = UInt16(pc+3)
+		let PCH = UInt8((0xFF00 & pc16) >> 8)
+		let PCL = UInt8(0x00FF & pc16)
+		array[SP-1] = PCH
+		array[SP-2] = PCL
+		SP -= 2
+		jumpInmediate(inm: inm)
+	}
+
+	func callInterrupt(inm: Int) {
+		let pc16 = UInt16(pc)
 		let PCH = UInt8((0xFF00 & pc16) >> 8)
 		let PCL = UInt8(0x00FF & pc16)
 		array[SP-1] = PCH
@@ -502,6 +565,14 @@ class CZKBaito8080: NSObject {
 		}
 	}
 
+	func jumpOnCarry(inm: Int) {
+		if (CY == 1) {
+			jumpInmediate(inm: inm)
+		} else {
+			pc += 3
+		}
+	}
+
 	//MARK: DATA TRANSFER functions
 	func loadInmediateRegisterPair(reg: UnsafeMutablePointer<UInt8>, byte3: UInt8, byte2: UInt8) {
 		reg.pointee = byte3
@@ -509,7 +580,7 @@ class CZKBaito8080: NSObject {
 	}
 
 	func loadAccumulatorIndirect(reg: UnsafeMutablePointer<UInt8>) {
-		let rp = Int("\(String(reg.pointee,radix:16))\(String(reg.advanced(by: 1).pointee,radix:16))",radix:16)
+		let rp = Int("\(String(reg.pointee,radix:16).formatByteZeroes)\(String(reg.advanced(by: 1).pointee,radix:16).formatByteZeroes)",radix:16)
 		A = array[rp!]
 	}
 
@@ -526,11 +597,12 @@ class CZKBaito8080: NSObject {
 	}
 
 	func moveToMemory(reg: UnsafeMutablePointer<UInt8>) {
-		array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!] = reg.pointee
+		print("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)")
+		array[Int("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)",radix:16)!] = reg.pointee
 	}
 
 	func moveToMemory(inm: UInt8) {
-		array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!] = inm
+		array[Int("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)",radix:16)!] = inm
 	}
 
 	func moveRegister(reg: UnsafePointer<UInt8>, toRegister: UnsafeMutablePointer<UInt8>) {
@@ -548,9 +620,9 @@ class CZKBaito8080: NSObject {
 
 	func moveFromMemory(reg: UnsafeMutablePointer<UInt8>) {
 		if (reg.successor() == &L) {  //Again, Swift enforces exclusive access. This can be disabled or "dirty-fixed" this way.
-			reg.pointee = array[Int("\(String(reg.pointee,radix:16))\(String(L,radix:16))",radix:16)!]
+			reg.pointee = array[Int("\(String(reg.pointee,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)",radix:16)!]
 		} else {
-			reg.pointee = array[Int("\(String(H,radix:16))\(String(L,radix:16))",radix:16)!]
+			reg.pointee = array[Int("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)",radix:16)!]
 		}
 	}
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13771"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14113"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -745,10 +745,16 @@
                                     <action selector="refreshScreen:" target="pUb-8a-Wy8" id="mXC-PD-bOj"/>
                                 </connections>
                             </button>
+                            <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="7cG-tY-Agy">
+                                <rect key="frame" x="3" y="23" width="291" height="253"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="0Ow-fq-Piy"/>
+                            </imageView>
                         </subviews>
                     </view>
                     <connections>
                         <outlet property="gameView" destination="0AS-cx-PjR" id="Oke-zS-MVU"/>
+                        <outlet property="imageView" destination="7cG-tY-Agy" id="3Uy-qE-05r"/>
                     </connections>
                 </viewController>
                 <customObject id="QBe-pg-gD3" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
