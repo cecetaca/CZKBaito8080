@@ -38,7 +38,7 @@ class CZKBaito8080: NSObject {
 
 	//Registers
 	var pc = 0
-	var SP = 0
+	var SP = 0x23DE
 	var A: UInt8 = 0
 	var B: UInt8 = 0
 	var C: UInt8 = 0
@@ -161,11 +161,15 @@ class CZKBaito8080: NSObject {
 				exclusiveOr(reg: &A)
 				cycles += 1
 				pc += 1
+			case 0xB0: str += "ORA B" //OR B with A
+				orRegister(reg: &B)
+				cycles += 1
+				pc += 1
 			case 0xC6: str += "ADI #$\(byte2)"
 				addInmediate(inm: UInt8(byte2, radix:16)!)
 				cycles += 2
 				pc += 2
-		case 0xE6: str += "ANI #$\(byte2)"
+			case 0xE6: str += "ANI #$\(byte2)"
 				andInmediate(inm: UInt8(byte2,radix:16)!)
 				cycles += 2
 				pc += 2
@@ -203,6 +207,9 @@ class CZKBaito8080: NSObject {
 			case 0xDA: str += "JC $\(byte3)\(byte2)"
 				jumpOnCarry(inm: Int(byte3+byte2,radix:16)!)
 				cycles += 3
+			case 0xE9: str += "PCHL" //HL to PC
+				jumpInmediate(inm: Int(H+L+1))
+				cycles += 1
 			// DATA TRANSFER
 			case 0x01: str += "LXI B, #$\(byte3)\(byte2)" //Load inmediate register pair B & C
 				loadInmediateRegisterPair(reg: &B, byte3: UInt8(byte3,radix:16)!, byte2: UInt8(byte2,radix:16)!)
@@ -256,6 +263,10 @@ class CZKBaito8080: NSObject {
 				moveInmediate(reg: &A, inm: UInt8(byte2, radix:16)!)
 				cycles += 2
 				pc += 2
+			case 0x46: str += "MOV B, M" //Move from memory
+				moveFromMemory(reg: &B)
+				cycles += 2
+				pc += 1
 			case 0x4F: str += "MOV C, A"
 				moveRegister(reg: &A, toRegister: &C)
 				cycles += 1
@@ -291,6 +302,10 @@ class CZKBaito8080: NSObject {
 			case 0x77: str += "MOV M, A" //Move register to memory
 				moveToMemory(reg: &A)
 				cycles += 2
+				pc += 1
+			case 0x79: str += "MOV A, D" //Move register to register (r1) <- (r2)
+				moveRegister(reg: &C, toRegister: &A)
+				cycles += 1
 				pc += 1
 			case 0x7A: str += "MOV A, D" //Move register to register (r1) <- (r2)
 				moveRegister(reg: &D, toRegister: &A)
@@ -341,6 +356,10 @@ class CZKBaito8080: NSObject {
 				popOffStack(reg: &H)
 				cycles += 3
 				pc += 1
+			case 0xE3: str += "XTHL" //Exchange top of stack
+				exchangeStackTop()
+				cycles += 5
+				pc += 1
 			case 0xE5: str += "PUSH H"
 				pushOnStack(reg: &H)
 				cycles += 3
@@ -366,13 +385,13 @@ class CZKBaito8080: NSObject {
 	}
 
 	func handleInterrupts() {
-		if (IE > 1) {
-			IE -= 1
-		} else if (IE == 1) {
+		if (IE == 1) {
+			IE = 0
 			//Handle
 			if (interruptToHandle != 0) {
+				//print("Handling interrupt \(interruptToHandle)")
 				callInterrupt(inm: 8*interruptToHandle)
-				interruptToHandle = 0
+				//interruptToHandle = 0
 			}
 		}
 	}
@@ -396,7 +415,7 @@ class CZKBaito8080: NSObject {
 		}
 
 		// Zero
-		if (value8 == 0) {
+		if (value == 0) {
 			Z = 1
 		} else {
 			Z = 0
@@ -493,6 +512,10 @@ class CZKBaito8080: NSObject {
 		} else {
 			A = setUpdatingFlags(value: Int(A ^ reg.pointee), clearCarry: true)
 		}
+	}
+
+	func orRegister(reg: UnsafeMutablePointer<UInt8>) {
+		A = setUpdatingFlags(value: Int(A | reg.pointee), clearCarry: true)
 	}
 
 	func andRegister(reg: UnsafeMutablePointer<UInt8>) {
@@ -633,7 +656,6 @@ class CZKBaito8080: NSObject {
 	}
 
 	func moveToMemory(reg: UnsafeMutablePointer<UInt8>) {
-		print("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)")
 		array[Int("\(String(H,radix:16).formatByteZeroes)\(String(L,radix:16).formatByteZeroes)",radix:16)!] = reg.pointee
 	}
 
@@ -695,6 +717,15 @@ class CZKBaito8080: NSObject {
 		SP += 2
 	}
 
+	func exchangeStackTop() {
+		let Laux = L
+		let Haux = H
+		L = array[SP]
+		H = array[SP+1]
+		array[SP] = Laux
+		array[SP+1] = Haux
+	}
+
 	func outputTo(port: Int) {
 		//Implemented in specific machine.
 	}
@@ -704,7 +735,7 @@ class CZKBaito8080: NSObject {
 	}
 
 	func enableInterrupts() {
-		IE = 3
+		IE = 1
 	}
 
 
@@ -727,7 +758,7 @@ class CZKBaito8080: NSObject {
 	}
 
 	func addOutput(res: String) {
-		print(res)
+		//print(res)
 		output += "\(res)\n"
 	}
 

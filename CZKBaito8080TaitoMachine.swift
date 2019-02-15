@@ -23,6 +23,8 @@ class CZKBaito8080TaitoMachine: CZKBaito8080 {
 	var shiftRegister: UInt16 = 0
 	var shiftOffset: UInt8 = 0
 
+	var input1:UInt8 = 0x08
+
 
 	override func handleInterrupts() {
 		if (IE == 1 && DispatchTime.now() >= lastRefresh+(1.0/refreshRateHz)) {
@@ -58,7 +60,7 @@ class CZKBaito8080TaitoMachine: CZKBaito8080 {
 		} else if (port == 0) {
 			A = 1
 		} else if (port == 1) {
-			A = 0
+			A = input1
 		}
 	}
 

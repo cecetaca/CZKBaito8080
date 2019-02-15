@@ -56,7 +56,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
 					self.updateRegsView()
 				}
 			}
-		}
+		} 
 		let outputWindow = self.storyboard?.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier(rawValue: "OutputWindow")) as! NSWindowController
 		outputWindow.showWindow(self)
 	}
